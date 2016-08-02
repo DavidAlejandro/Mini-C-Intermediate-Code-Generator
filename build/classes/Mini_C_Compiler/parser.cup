@@ -1,0 +1,839 @@
+package Mini_C_Compiler;
+import java_cup.runtime.*;
+
+parser code
+{:
+    public node padre;
+    public boolean validSintax = true;
+
+    /**Metodo al que se llama automáticamente ante algún error sintactico.*/
+    public void syntax_error(Symbol s){
+ validSintax = false;
+        System.out.print(" Error sintáctico en la línea " + (s.right+1) +" Columna "+s.left+ ". Identificador "
+        +s.value + " no reconocido. " );
+    }
+
+    /**Metodo al que se llama en el momento en que ya no es posible una recuperación de
+    errores.*/
+    public void unrecovered_syntax_error(Symbol s) throws java.lang.Exception{
+ validSintax = false;
+        System.out.println("Error en la Línea " + (s.right+1)+ "Columna "+s.left+". Identificador " +
+        s.value + " no reconocido. ");
+    }
+    
+    public void setPadre(node pa){
+        padre = pa;        
+    }
+:}
+
+action code
+{:
+ 
+:}
+
+terminal String startvoodoo, printf, scanf, printval, endvoodoo, endritual, spell, endspell, treturn, tif, tthen, telse, tendif, twhile, tendwhile, tfor, tendfor, tselect, tendselect, toption, tendoption, tdefault, tenddefault, assign, mas, menos, por, division, greater, less, tand, tor, tnot, tequal, tnotequal, lessorequal, greaterorequal;
+
+terminal String tstart, coma, tend, parizq, parder, tseparator, dospuntos, llaveizq, llaveder, sbracketizq, sbracketder;
+
+terminal String stringval, numero, iden, characterval, floatval, amp;
+
+terminal String tchar, tinteger, tfloat, tstring, tvoid;
+
+non terminal node INICIA,S, IOFUNCTIONS, BOOLEANEXP, OPTIONS, ASSIGNPS, OPTION, SELECT, DEFAULT, FUNCTIONCALLPARAMS, ARRAYPARAMS, ARRAYVAL, NUMEROS, LETRAS, BLOCK, BLOCKS, BLOCKP, ASSIGNS, ASSIGN, ASSIGNP, ARITHMETIC, ARITHMETICP, ARITHMETICS, FORPARAMS, COMPARISON, COMPARISONOPERATORS, STARTVOODOO, DECLARACION, DECLARACIONES, SPELLS, SPELL, RETURNTYPES, FUNCTIONDECLARATIONPARAMS, FUNCTIONDECLARATIONPARAMSP, PARAMTYPES, ENDVOODOO;
+ 
+non terminal Character T;
+
+precedence left tor;
+
+precedence left tand;
+
+precedence left tnot;
+
+precedence left assign, parizq;
+
+precedence left mas, menos;
+
+precedence left por, division;
+
+start with INICIA;
+
+INICIA::= STARTVOODOO:sp    {:  
+                                  
+                                    parser.setPadre(sp);
+                            :};
+
+STARTVOODOO::= 
+     DECLARACIONES:d SPELLS:s                      {: node nodo = new node("program");
+                                                        
+                                                                                //nodo.children.add(new node(sv, svright+1, svleft));
+                                                                               // nodo.children.add(new node(id, idright+1, idleft));
+                                                                                nodo.children.add(d);
+                                                                                nodo.children.add(s);
+                                                                                //nodo.children.add(r);
+                                                                                //nodo.children.add(ev);
+                                                                                RESULT = nodo;  :}
+|
+     SPELLS:s                                       {: node nodo = new node("program");
+                                                                                //nodo.children.add(new node(sv, svright+1, svleft));
+                                                                               // nodo.children.add(new node(id, idright+1, idleft));                                                                                
+                                                                                nodo.children.add(s);
+                                                                                //nodo.children.add(r);
+                                                                                //nodo.children.add(ev);
+                                                                                RESULT = nodo; :}
+|
+     DECLARACIONES:d                              {: node nodo = new node("program");
+                                                                                //nodo.children.add(new node(sv, svright+1, svleft));
+                                                                                //nodo.children.add(new node(id, idright+1, idleft));
+                                                                                nodo.children.add(d);                                                                                
+                                                                                //nodo.children.add(r);
+                                                                                //nodo.children.add(ev);
+                                                                                RESULT = nodo; :}
+
+
+
+;
+
+DECLARACIONES::=                                        
+    DECLARACION:o                              {: node nodo = new node("declaraciones");                                                  
+                                                  nodo.children.add(o);
+                                                  RESULT = nodo; 
+                                                    :}
+|  
+   DECLARACIONES:os DECLARACION:o              {:os.children.add(o);
+                                                RESULT = os; :} 
+    
+
+;                                                        
+
+
+DECLARACION::= 
+    RETURNTYPES:t iden:id ARRAYPARAMS:ap assign:a characterval:v coma                    {: node nodo = new node("declaracion", idright+1, idleft);
+                                                                        nodo.children.add(new node(t.sym, tright+1, tleft, 2));
+                                                                        nodo.children.add(new node(id, idright+1, idleft));
+                                                                        nodo.children.add(ap);  
+                                                                        nodo.children.add(new node(v, vright+1, vleft, "char"));
+                                                                        nodo.type =  t.sym;
+                                                                        RESULT = nodo; :}
+|
+    RETURNTYPES:t iden:id ARRAYPARAMS:ap assign:a numero:v coma                         {: node nodo = new node("declaracion", idright+1, idleft);
+                                                                        nodo.children.add(new node(t.sym, tright+1, tleft, 4));
+                                                                        nodo.children.add(new node(id, idright+1, idleft)); 
+                                                                        nodo.children.add(ap);                                                                                                                                               
+                                                                        nodo.children.add(new node(v, vright+1, vleft, "int"));
+                                                                        nodo.type =  t.sym;
+                                                                        RESULT = nodo; :}
+|
+    RETURNTYPES:t iden:id ARRAYPARAMS:ap assign:a floatval:v coma                         {: node nodo = new node("declaracion", idright+1, idleft);
+                                                                        nodo.children.add(new node(t.sym, tright+1, tleft, 4));
+                                                                        nodo.children.add(new node(id, idright+1, idleft));    
+                                                                        nodo.children.add(ap);                                                                                                                                            
+                                                                        nodo.children.add(new node(v, vright+1, vleft, "float"));
+                                                                        nodo.type =  t.sym;
+                                                                        RESULT = nodo; :}
+|
+    RETURNTYPES:t iden:id ARRAYPARAMS:ap assign:a stringval:v coma                         {: node nodo = new node("declaracion", idright+1, idleft);
+                                                                        nodo.children.add(new node(t.sym, tright+1, tleft, 255));
+                                                                        nodo.children.add(new node(id, idright+1, idleft));
+                                                                        nodo.children.add(ap);                                                                                                                                                
+                                                                        nodo.children.add(new node(v, vright+1, vleft, "string"));
+                                                                        nodo.type = t.sym;
+                                                                        RESULT = nodo; :}
+|
+    RETURNTYPES:t iden:id ARRAYPARAMS:ap assign:a ARRAYVAL:av coma                         {: node nodo = new node("declaracion", idright+1, idleft);
+                                                                        nodo.children.add(new node(t.sym + ",array", tright+1, tleft));
+                                                                        nodo.children.add(new node(id, idright+1, idleft));  
+                                                                        nodo.children.add(ap);  
+                                                                        av.type = t.sym + ",array";
+                                                                        nodo.children.add(av);
+                                                                        RESULT = nodo; :}
+|
+    error                                                    {: RESULT = new node("Declaración de variable inválida."); System.out.println("Declaración de variable inválida. "); :}
+;
+
+ARRAYPARAMS::=
+    sbracketizq sbracketder                                   {:RESULT = new node("variable_size");:}
+|
+    
+    sbracketizq numero:n sbracketder                          {:RESULT = new node(n, nright+1, nleft);:}
+|
+                                                                {:RESULT = new node("non_array_variable");:}
+|
+error                                                           {:RESULT = new node("error"); System.out.println("Declaración inválida. ");:}
+;
+
+ARRAYVAL::=
+    llaveizq llaveder                                       {:RESULT = new node("empty_array");:}
+|
+    llaveizq NUMEROS:n llaveder                               {:RESULT = n;:}
+|
+    llaveizq LETRAS:n llaveder                               {:RESULT = n;:}
+;
+
+NUMEROS::=
+    numero:n                                  {:node nodo = new node("arrayValues");
+                                                nodo.children.add(new node(n, nright+1, nleft));
+                                                RESULT = nodo;:}
+|
+    NUMEROS:ns tseparator  numero:n                  {:node nodo = new node(n, nright+1, nleft, "int,array");
+                                                
+                                                ns.children.add(nodo);
+                                               
+                                                RESULT = ns;:}
+;
+
+LETRAS::=
+    characterval:n                                  {:node nodo = new node("arrayValues");
+                                                nodo.children.add(new node(n, nright+1, nleft, "char,array"));
+                                                RESULT = nodo;:}
+|
+    LETRAS:ns tseparator  numero:n             {:node nodo = new node(n, nright+1, nleft);
+                                                
+                                                ns.children.add(nodo);
+                                               
+                                                RESULT = ns;:}
+;
+    
+
+
+SPELLS::=
+    SPELL:o                             {: node nodo = new node("functions");
+                                           nodo.children.add(o);
+                                           RESULT = nodo; 
+                                        :}
+|
+    SPELLS:os SPELL:o                   {: os.children.add(o);
+                                                RESULT = os;
+                                        :}
+
+;
+
+
+SPELL::=
+   
+     RETURNTYPES:t iden:id parizq:pi parder:pd BLOCKS:b                                            {: node nodo = new node("function");
+                                                                                                    nodo.children.add(t);
+                                                                                                    nodo.children.add(new node(id, idright+1, idleft));
+                                                                                                    nodo.children.add(b);
+                                                                                                    
+                                                                                                    nodo.returnType = t.sym;
+                                                                                                    //node retvalue = new node(retid, idright+1, idleft);
+                                                                                                    //retvalue.variable = true;
+                                                                                                    //nodo.children.add(retvalue);
+                                                                                                    //nodo.children.add(new node(es));
+                                                                                                    RESULT = nodo;:}
+
+ 
+|
+    RETURNTYPES:t iden:id parizq:pi FUNCTIONDECLARATIONPARAMS:f parder:pd  BLOCKS:b    {:node nodo = new node("function");
+                                                                                                                            nodo.children.add(t);
+                                                                                                                            nodo.children.add(new node(id, idright+1, idleft));                                                                                                    
+                                                                                                                            nodo.children.add(f);                                                                                                    
+                                                                                                                            nodo.children.add(b);
+                                                                                                                            
+                                                                                                                            nodo.returnType = t.sym;
+                                                                                                                            nodo.params = f;
+                                                                                                                            //node retvalue = new node(retid, idright+1, idleft);
+                                                                                                                            //retvalue.variable = true;
+                                                                                                                            //nodo.children.add(retvalue);
+                                                                                                                            //nodo.children.add(new node(es));
+                                                                                                                            RESULT = nodo;
+                                                                                                                            :}
+;
+
+RETURNTYPES::=
+     tvoid:t       {:RESULT = new node(t, tright+1, tleft);:}
+|
+     tinteger:t    {:RESULT = new node(t, tright+1, tleft);:}
+|
+     tchar:t       {:RESULT = new node(t, tright+1, tleft);:}
+|
+     tstring:t     {:RESULT = new node(t, tright+1, tleft);:}
+|
+     tfloat:t      {:RESULT = new node(t, tright+1, tleft);:}
+;
+
+FUNCTIONDECLARATIONPARAMS::=
+    FUNCTIONDECLARATIONPARAMS:t tseparator PARAMTYPES:p iden:id {:node nodo = new node("param");
+                                                                nodo.children.add(p);
+                                                                nodo.children.add(new node(id, idright+1, idleft));
+                                                                t.children.add(nodo);
+                                                                RESULT = t;
+                                                                  :}
+|
+    
+    PARAMTYPES:p iden:id                                        {:node nodo = new node("functionParams");
+                                                                  node nodotmp = new node("param");
+                                                                  nodotmp.children.add(p);
+                                                                  nodotmp.children.add(new node(id, idright+1, idleft));
+                                                                  nodo.children.add(nodotmp);
+                                                                  RESULT = nodo;
+                                                                    :}
+;
+
+PARAMTYPES::=
+    tinteger:t {:RESULT = new node(t, tright+1, tleft);:}
+|
+    tchar:t {:RESULT = new node(t, tright+1, tleft);:}
+|
+    tstring:t {:RESULT = new node(t, tright+1, tleft);:}
+|
+    tfloat:t {:RESULT = new node(t, tright+1, tleft);:}
+;
+
+SELECT::=
+    tselect:t parizq:pi iden:id parder:pd OPTIONS:os DEFAULT:d tendselect:et                     {: node nodo = new node("select");
+                                                                                                    nodo.children.add(new node(t));                                                                                        
+                                                                                                    nodo.children.add(new node(id, idright+1, idleft));                                                                                        
+                                                                                                    nodo.children.add(os);
+                                                                                                    nodo.children.add(d);
+                                                                                                    nodo.children.add(new node(et));
+                                                                                                    RESULT = nodo;
+                                                                                                    :}
+;
+
+OPTIONS::=
+    OPTION:o                          {: node nodo = new node("opción");
+                                         nodo.children.add(o);
+                                         RESULT = nodo;
+                                        :}
+|
+    OPTION:o OPTIONS:os               {: node nodo = new node("opción");
+                                         nodo.children.add(o);
+                                         nodo.children.add(os);
+                                         RESULT = nodo;
+                                         :} 
+
+;
+
+OPTION::=
+    toption:t numero:n dospuntos:d parizq:pi BLOCKS:b parder:pd tendoption:et        {: node nodo = new node("option");
+                                                                                        nodo.children.add(new node(t));
+                                                                                        nodo.children.add(new node(n, nright+1, nleft));
+                                                                                        nodo.children.add(new node(d));                                                                                        
+                                                                                        nodo.children.add(b);                                                                                        
+                                                                                        nodo.children.add(new node(et));                                                                                        
+                                                                                        RESULT = nodo;                                                                                         
+                                                                                        :} 
+|
+    toption:t numero:n dospuntos:d tendoption:ed                                     {: node nodo = new node("option");
+                                                                                        nodo.children.add(new node(t));
+                                                                                        nodo.children.add(new node(n, nright+1, nleft));
+                                                                                        nodo.children.add(new node(d));
+                                                                                        nodo.children.add(new node(ed));
+                                                                                        RESULT = nodo;
+                                                                                        :} 
+; 
+
+DEFAULT::=
+    tdefault:t parizq:pi BLOCKS:b parder:pd tenddefault:ed                        {: node nodo = new node("default");
+                                                                                     nodo.children.add(new node(t));                                                                                     
+                                                                                     nodo.children.add(b);                                                                                     
+                                                                                     nodo.children.add(new node(ed));
+                                                                                     RESULT = nodo;
+                                                                                    :} 
+|
+    tdefault:t  tenddefault:ed                                {: node nodo = new node(t);nodo.children.add(new node(t));nodo.children.add(new node(ed));RESULT = nodo;:} 
+; 
+
+BLOCKS::=
+     llaveizq DECLARACIONES:d llaveder                                                {:node nodo = new node("bloque");
+                                                                                   nodo.children.add(d);
+                                                                                   
+                                                                                   RESULT = nodo ;:}     
+|
+    llaveizq DECLARACIONES:d BLOCKP:bs llaveder                                        {:node nodo = new node("bloque");
+                                                                                   nodo.children.add(d);
+                                                                                   //nodo.children.add(b);                                                                                   
+                                                                                   bs.children.add(nodo);                                                                                   
+                                                                                   RESULT=bs;:}
+|
+    llaveizq BLOCKP:b llaveder                                                              {:node nodo = new node("bloque"); 
+                                                                                  nodo.children.add(b); 
+                                                                                   RESULT = nodo ;:}                                                                   
+
+|
+    llaveizq llaveder
+;
+
+BLOCKP::=
+
+   
+     BLOCK:b                                                           {:node nodo = new node("bloque"); 
+                                                                                  nodo.children.add(b); 
+                                                                                   RESULT = nodo ;:}
+| 
+     BLOCKP:bp BLOCK:b                                                {:bp.children.add(b);
+                                                                                   RESULT=bp;:}
+;
+
+
+BLOCK::=
+
+   
+     tfor:b parizq:pi FORPARAMS:c parder:pd  BLOCKS :b1       {: node nodo = new node("for");                                                                                        
+                                                                                        nodo.children.add(c);                                                                                        
+                                                                                        nodo.children.add(b1);
+                                                                                        nodo.children.add(new node("endfor"));
+                                                                                        //nodo.children.add(new node(ef));                                                                                        
+                                                                                        RESULT = nodo; :}
+| 
+     twhile:b parizq:pi BOOLEANEXP:c parder:pd BLOCKS:b1           {: node nodo = new node("while");                                                                                        
+                                                                                        nodo.children.add(c);                                                                                        
+                                                                                        nodo.children.add(b1);
+                                                                                        nodo.children.add(new node("endwhile"));
+                                                                                       // nodo.children.add(new node(ew));                                                                                        
+                                                                                        RESULT = nodo; :}
+
+|
+     tif:b parizq:pi BOOLEANEXP:c parder:pd BLOCKS:b1 telse:e BLOCKS:b2    {: node nodo = new node("if");                                                                                        
+                                                                                        nodo.children.add(c);                                                                                        
+                                                                                        nodo.children.add(b1);
+                                                                                        nodo.children.add(new node(e));
+                                                                                        nodo.children.add(b2);
+                                                                                        nodo.children.add(new node("endif"));
+                                                                                      //  nodo.children.add(new node(ei));
+                                                                                        RESULT = nodo; :}
+|
+     iden:id parizq:pi parder:pd coma                                      {: node nodo = new node("functionCall", idright+1, idleft);
+                                                                              nodo.children.add(new node(id));
+                                                                              nodo.children.add(new node("functionCallParams"));
+                                                                              RESULT = nodo; :}
+|
+     iden:id parizq:pi FUNCTIONCALLPARAMS:c parder:pd coma                 {: node nodo = new node("functionCall", idright+1, idleft);
+                                                                              nodo.children.add(new node(id));                                                                              
+                                                                              nodo.children.add(c);RESULT = nodo;:}   
+|
+    IOFUNCTIONS:iof  coma                                          {: RESULT = iof; :}
+|
+     ASSIGNP:asp                                               {: RESULT = asp; :}
+|
+    treturn:r iden:rv coma                                             {: node nodo = new node("return");                                                                                        
+                                                                        nodo.children.add(new node(rv, rvright+1, rvleft, "iden")); 
+                                                                        RESULT = nodo; :}
+|
+    treturn:r stringval:rv coma                                              {: node nodo = new node("return");                                                                                        
+                                                                        nodo.children.add(new node(rv, rvright+1, rvleft, "string")); 
+                                                                        RESULT = nodo; :}
+|
+    treturn:r numero:rv coma                                               {: node nodo = new node("return");                                                                                        
+                                                                        nodo.children.add(new node(rv, rvright+1, rvleft, "int")); 
+                                                                        RESULT = nodo; :}
+|
+    treturn:r characterval:rv coma                                               {: node nodo = new node("return");                                                                                        
+                                                                        nodo.children.add(new node(rv, rvright+1, rvleft, "char")); 
+                                                                        RESULT = nodo; :}
+|
+    treturn:r floatval:rv coma                                               {: node nodo = new node("return");                                                                                        
+                                                                        nodo.children.add(new node(rv, rvright+1, rvleft, "float")); 
+                                                                        RESULT = nodo; :}
+;
+
+FUNCTIONCALLPARAMS::=
+    iden:id                                                 {:node nodo = new node("functionCallParams");
+                                                              node nodotmp = new node("callParam");
+                                                              node tmpParam = new node(id, idright+1, idleft); 
+                                                              tmpParam.variable = true;
+                                                              nodotmp.children.add(tmpParam);
+                                                              
+                                                              nodo.children.add(nodotmp);
+                                                              RESULT = nodo;                                                              
+                                                            :} 
+|
+    FUNCTIONCALLPARAMS:fp tseparator iden:id                {:node nodo = new node("callParam");
+                                                              node nodotmp = new node(id, idright+1, idleft);
+                                                              nodotmp.variable = true;
+                                                              nodo.children.add(nodotmp);
+                                                              
+                                                              fp.children.add(nodo);
+                                                              RESULT = fp; 
+                                                            :} 
+;
+
+ASSIGNP::=
+    iden:id assign:as1 ASSIGN:as2                             {: node nodo = new node(as1, idright+1, idleft);
+                                                                 node tmp = new node(id, idright+1, idleft);
+                                                                 tmp.variable = true;
+                                                                 nodo.children.add(tmp);
+                                                                 nodo.children.add(as2);
+                                                                 
+                                                                 RESULT = nodo;:}
+;
+
+ASSIGN::=
+    ARITHMETICS:arms  coma                                    {: RESULT = arms;:}
+|   
+    characterval:v coma                                       {: node nodo = new node(v, vright+1, vleft);nodo.type = "char";RESULT = nodo;:}
+|
+    stringval:v coma                                          {: node nodo = new node(v, vright+1, vleft);nodo.type = "string";RESULT = nodo;:}
+
+
+
+
+    
+;
+
+ARITHMETICS ::= 
+    ARITHMETICS:v ARITHMETICP:vp                              {:node nodo = new node("aritmetico");
+                                                                nodo.children.add(v);
+                                                                nodo.children.add(vp);
+                                                                RESULT = nodo;
+                                                                :}
+| 
+    ARITHMETICP:v                                             {:RESULT = v;:}
+;
+
+ARITHMETICP ::= 
+    ARITHMETIC:v                                 {:RESULT = v;:}
+;
+
+ARITHMETIC      ::= 
+    ARITHMETIC:v1 mas:op ARITHMETIC:v2                          {:node nodo = new node(op);
+                                                                nodo.children.add(v1);
+                                                                nodo.children.add(v2);
+                                                                RESULT = nodo;
+                                                                :}
+| 
+    ARITHMETIC:v1 menos:op ARITHMETIC:v2                        {:node nodo = new node(op);
+                                                                nodo.children.add(v1);
+                                                                nodo.children.add(v2);
+                                                                RESULT = nodo;
+                                                                :}
+| 
+    ARITHMETIC:v1 por:op ARITHMETIC:v2                         {:node nodo = new node(op);
+                                                                nodo.children.add(v1);
+                                                                nodo.children.add(v2);
+                                                                RESULT = nodo;
+                                                                :}
+| 
+    ARITHMETIC:v1 division:op ARITHMETIC:v2                     {:node nodo = new node(op);
+                                                                nodo.children.add(v1);
+                                                                nodo.children.add(v2);
+                                                                RESULT = nodo;
+                                                                :}
+|   
+    numero:v                                                  {:node nodo = new node(v, vright+1, vleft);
+                                                                nodo.type = "int";
+                                                                RESULT = nodo;
+                                                                :}
+|   
+    floatval:v                                                  {:node nodo = new node(v, vright+1, vleft);
+                                                                nodo.type = "float";
+                                                                RESULT = nodo;
+                                                                :}
+|   
+    iden:v                                                    {:node nodo = new node(v, vright+1, vleft);
+                                                                nodo.variable = true;
+                                                                RESULT = nodo;
+                                                                :}     
+;
+
+FORPARAMS::=
+    tinteger:ti iden:id assign:as numero:n1 coma iden:id1 less:ge numero:n2 coma iden:id2 mas:men1 mas:men2               {: node pa = new node("forParams");
+                                                                                                                        node t = new node(ti);
+                                                                                                                        node i = new node(id, idright+1, idleft);
+                                                                                                                        i.variable = true;                                   
+                                                                                                                        node a = new node(as, asright+1, asleft);
+                                                                                                                        node num1 = new node(n1, n1right+1, n1left);
+                                                                                                                        node i1 = new node(id1, id1right+1, id1left);
+                                                                                                                        i1.variable = true;
+                                                                                                                        node goe = new node(ge, geright+1, geleft);
+                                                                                                                        node num2 = new node(n2, n2right+1, n2left);
+                                                                                                                        node i2 = new node(id2, id2right+1, id2left);
+                                                                                                                        i2.variable = true;
+                                                                                                                        node m1 = new node("++");
+                                                                                                                        //node m2 = new node(men2);
+                                                                                                                        pa.children.add(t);
+                                                                                                                        pa.children.add(i);
+                                                                                                                        pa.children.add(a);
+                                                                                                                        pa.children.add(num1);
+                                                                                                                        pa.children.add(i1);
+                                                                                                                        pa.children.add(goe);
+                                                                                                                        pa.children.add(num2);
+                                                                                                                        pa.children.add(i2);
+                                                                                                                        pa.children.add(m1);
+                                                                                                                       // pa.children.add(m2);
+                                                                                                                        RESULT = pa; :} 
+|
+    tinteger:ti iden:id assign:as numero:n1 coma iden:id1 lessorequal:ge numero:n2 coma iden:id2 mas:men1 mas:men2        {: node pa = new node("forParams");
+                                                                                                                        node t = new node(ti);
+                                                                                                                        node i = new node(id, idright+1, idleft);
+                                                                                                                        i.variable = true;
+                                                                                                                        node a = new node(as, asright+1, asleft);
+                                                                                                                        node num1 = new node(n1, n1right+1, n1left);
+                                                                                                                        node i1 = new node(id1, id1right+1, id1left);
+                                                                                                                        i1.variable = true;
+                                                                                                                        node goe = new node(ge, geright+1, geleft);
+                                                                                                                        node num2 = new node(n2, n2right+1, n2left);
+                                                                                                                        node i2 = new node(id2, id2right+1, id2left);
+                                                                                                                        i2.variable = true;
+                                                                                                                        node m1 = new node("++");
+                                                                                                                        //node m2 = new node(men2);
+                                                                                                                        pa.children.add(t);
+                                                                                                                        pa.children.add(i);
+                                                                                                                        pa.children.add(a);
+                                                                                                                        pa.children.add(num1);
+                                                                                                                        pa.children.add(i1);
+                                                                                                                        pa.children.add(goe);
+                                                                                                                        pa.children.add(num2);
+                                                                                                                        pa.children.add(i2);
+                                                                                                                        pa.children.add(m1);
+                                                                                                                       // pa.children.add(m2);
+                                                                                                                        RESULT = pa; :} 
+|
+    tinteger:ti iden:id assign:as numero:n1 coma iden:id1 greater:ge numero:n2 coma iden:id2 mas:men1 mas:men2            {: node pa = new node("forParams");
+                                                                                                                        node t = new node(ti);
+                                                                                                                        node i = new node(id, idright+1, idleft);
+                                                                                                                        i.variable = true;
+                                                                                                                        node a = new node(as, asright+1, asleft);
+                                                                                                                        node num1 = new node(n1, n1right+1, n1left);
+                                                                                                                        node i1 = new node(id1, id1right+1, id1left);
+                                                                                                                        i1.variable = true;
+                                                                                                                        node goe = new node(ge, geright+1, geleft);
+                                                                                                                        node num2 = new node(n2, n2right+1, n2left);
+                                                                                                                        node i2 = new node(id2, id2right+1, id2left);
+                                                                                                                        i2.variable = true;
+                                                                                                                        node m1 = new node("++");
+                                                                                                                        //node m2 = new node(men2);
+                                                                                                                        pa.children.add(t);
+                                                                                                                        pa.children.add(i);
+                                                                                                                        pa.children.add(a);
+                                                                                                                        pa.children.add(num1);
+                                                                                                                        pa.children.add(i1);
+                                                                                                                        pa.children.add(goe);
+                                                                                                                        pa.children.add(num2);
+                                                                                                                        pa.children.add(i2);
+                                                                                                                        pa.children.add(m1);
+                                                                                                                       // pa.children.add(m2);
+                                                                                                                        RESULT = pa; :} 
+|
+    tinteger:ti iden:id assign:as numero:n1 coma iden:id1 greaterorequal:ge numero:n2 coma iden:id2 mas:men1 mas:men2     {: node pa = new node("forParams");
+                                                                                                                        node t = new node(ti);
+                                                                                                                        node i = new node(id, idright+1, idleft);
+                                                                                                                        i.variable = true;
+                                                                                                                        node a = new node(as, asright+1, asleft);
+                                                                                                                        node num1 = new node(n1, n1right+1, n1left);
+                                                                                                                        node i1 = new node(id1, id1right+1, id1left);
+                                                                                                                        i1.variable = true;
+                                                                                                                        node goe = new node(ge, geright+1, geleft);
+                                                                                                                        node num2 = new node(n2, n2right+1, n2left);
+                                                                                                                        node i2 = new node(id2, id2right+1, id2left);
+                                                                                                                        i2.variable = true;
+                                                                                                                        node m1 = new node("++");
+                                                                                                                        //node m2 = new node(men2);
+                                                                                                                        pa.children.add(t);
+                                                                                                                        pa.children.add(i);
+                                                                                                                        pa.children.add(a);
+                                                                                                                        pa.children.add(num1);
+                                                                                                                        pa.children.add(i1);
+                                                                                                                        pa.children.add(goe);
+                                                                                                                        pa.children.add(num2);
+                                                                                                                        pa.children.add(i2);
+                                                                                                                        pa.children.add(m1);
+                                                                                                                       // pa.children.add(m2);
+                                                                                                                        RESULT = pa;System.out.println("Parametros de un for."); :}
+|
+    tinteger:ti iden:id assign:as numero:n1 coma iden:id1 less:ge numero:n2 coma iden:id2 menos:men1 menos:men2           {: node pa = new node("forParams");
+                                                                                                                        node t = new node(ti);
+                                                                                                                        node i = new node(id, idright+1, idleft);
+                                                                                                                        i.variable = true;
+                                                                                                                        node a = new node(as, asright+1, asleft);
+                                                                                                                        node num1 = new node(n1, n1right+1, n1left);
+                                                                                                                        node i1 = new node(id1, id1right+1, id1left);
+                                                                                                                        i1.variable = true;
+                                                                                                                        node goe = new node(ge, geright+1, geleft);
+                                                                                                                        node num2 = new node(n2, n2right+1, n2left);
+                                                                                                                        node i2 = new node(id2, id2right+1, id2left);
+                                                                                                                        i2.variable = true;
+                                                                                                                        node m1 = new node("--");
+                                                                                                                        //node m2 = new node(men2);
+                                                                                                                        pa.children.add(t);
+                                                                                                                        pa.children.add(i);
+                                                                                                                        pa.children.add(a);
+                                                                                                                        pa.children.add(num1);
+                                                                                                                        pa.children.add(i1);
+                                                                                                                        pa.children.add(goe);
+                                                                                                                        pa.children.add(num2);
+                                                                                                                        pa.children.add(i2);
+                                                                                                                        pa.children.add(m1);
+                                                                                                                        //pa.children.add(m2);
+                                                                                                                        RESULT = pa; :} 
+|
+    tinteger:ti iden:id assign:as numero:n1 coma iden:id1 lessorequal:ge numero:n2 coma iden:id2 menos:men1 menos:men2    {: node pa = new node("forParams");
+                                                                                                                        node t = new node(ti);
+                                                                                                                        node i = new node(id, idright+1, idleft);
+                                                                                                                        i.variable = true;
+                                                                                                                        node a = new node(as, asright+1, asleft);
+                                                                                                                        node num1 = new node(n1, n1right+1, n1left);
+                                                                                                                        node i1 = new node(id1, id1right+1, id1left);
+                                                                                                                        i1.variable = true;
+                                                                                                                        node goe = new node(ge, geright+1, geleft);
+                                                                                                                        node num2 = new node(n2, n2right+1, n2left);
+                                                                                                                        node i2 = new node(id2, id2right+1, id2left);
+                                                                                                                        i2.variable = true;
+                                                                                                                        node m1 = new node("--");
+                                                                                                                        //node m2 = new node(men2);
+                                                                                                                        pa.children.add(t);
+                                                                                                                        pa.children.add(i);
+                                                                                                                        pa.children.add(a);
+                                                                                                                        pa.children.add(num1);
+                                                                                                                        pa.children.add(i1);
+                                                                                                                        pa.children.add(goe);
+                                                                                                                        pa.children.add(num2);
+                                                                                                                        pa.children.add(i2);
+                                                                                                                        pa.children.add(m1);
+                                                                                                                       // pa.children.add(m2);
+                                                                                                                        RESULT = pa;:} 
+|
+    tinteger:ti iden:id assign:as numero:n1 coma iden:id1 greater:ge numero:n2 coma iden:id2 menos:men1 menos:men2        {: node pa = new node("forParams");
+                                                                                                                        node t = new node(ti);
+                                                                                                                        node i = new node(id, idright+1, idleft);
+                                                                                                                        i.variable = true;
+                                                                                                                        node a = new node(as, asright+1, asleft);
+                                                                                                                        node num1 = new node(n1, n1right+1, n1left);
+                                                                                                                        node i1 = new node(id1, id1right+1, id1left);
+                                                                                                                        i1.variable = true;
+                                                                                                                        node goe = new node(ge, geright+1, geleft);
+                                                                                                                        node num2 = new node(n2, n2right+1, n2left);
+                                                                                                                        node i2 = new node(id2, id2right+1, id2left);
+                                                                                                                        i2.variable = true;
+                                                                                                                        node m1 = new node("--");
+                                                                                                                        //node m2 = new node(men2);
+                                                                                                                        pa.children.add(t);
+                                                                                                                        pa.children.add(i);
+                                                                                                                        pa.children.add(a);
+                                                                                                                        pa.children.add(num1);
+                                                                                                                        pa.children.add(i1);
+                                                                                                                        pa.children.add(goe);
+                                                                                                                        pa.children.add(num2);
+                                                                                                                        pa.children.add(i2);
+                                                                                                                        pa.children.add(m1);
+                                                                                                                        //pa.children.add(m2);
+                                                                                                                        RESULT = pa; :} 
+|
+    tinteger:ti iden:id assign:as numero:n1 coma iden:id1 greaterorequal:ge numero:n2 coma iden:id2 menos:men1 menos:men2 {: node pa = new node("forParams");
+                                                                                                                        node t = new node(ti);
+                                                                                                                        node i = new node(id, idright+1, idleft);
+                                                                                                                        i.variable = true;
+                                                                                                                        node a = new node(as, asright+1, asleft);
+                                                                                                                        node num1 = new node(n1, n1right+1, n1left);
+                                                                                                                        node i1 = new node(id1, id1right+1, id1left);
+                                                                                                                        i1.variable = true;
+                                                                                                                        node goe = new node(ge, geright+1, geleft);
+                                                                                                                        node num2 = new node(n2, n2right+1, n2left);
+                                                                                                                        node i2 = new node(id2, id2right+1, id2left);
+                                                                                                                        i2.variable = true;
+                                                                                                                        node m1 = new node("--");
+                                                                                                                        //node m2 = new node(men2);
+                                                                                                                        pa.children.add(t);
+                                                                                                                        pa.children.add(i);
+                                                                                                                        pa.children.add(a);
+                                                                                                                        pa.children.add(num1);
+                                                                                                                        pa.children.add(i1);
+                                                                                                                        pa.children.add(goe);
+                                                                                                                        pa.children.add(num2);
+                                                                                                                        pa.children.add(i2);
+                                                                                                                        pa.children.add(m1);
+                                                                                                                        //pa.children.add(m2);
+                                                                                                                        RESULT = pa;
+                                                                                                                       :}
+|
+    error {: node error = new node("parametro_inválido");System.out.println("Parametros de bloque For inválidos"); RESULT = error;:}
+ 
+;
+
+BOOLEANEXP::=
+    COMPARISON:c                                                                      {:RESULT = c;:}
+|
+    tnot:n parizq BOOLEANEXP:c parder                                                            {:
+                                                                                        node nodo = new node(n,nright+1,nleft);
+                                                                                        nodo.children.add(c);
+                                                                                        RESULT = nodo;:}
+|
+    BOOLEANEXP:be tand:a COMPARISON:c                                                        {:
+                                                                                        node nodo = new node(a,aright+1,aleft);
+                                                                                        nodo.children.add(be);
+                                                                                        nodo.children.add(c);
+                                                                                        RESULT = nodo;:}
+|   
+    BOOLEANEXP:be tor:o COMPARISON:c                                                   {: node nodo = new node(o,oright+1,oleft);
+                                                                                        nodo.children.add(be);
+                                                                                        nodo.children.add(c);
+                                                                                        RESULT = nodo;:}
+|   
+    BOOLEANEXP:be tor:o tnot:n parizq COMPARISON:c   parder                            {: node nodo = new node(o,oright+1,oleft);
+                                                                                          node nodoNot = new node(n,nright+1,nleft);
+                                                                                          nodoNot.children.add(c);
+                                                                                        nodo.children.add(be);
+                                                                                        nodo.children.add(nodoNot);
+                                                                                        RESULT = nodo;:}
+|
+    BOOLEANEXP:be tand:a tnot:n parizq COMPARISON:c  parder                             {: node nodo = new node(a,aright+1,aleft);
+                                                                                          node nodoNot = new node(n,nright+1,nleft);
+                                                                                          nodoNot.children.add(c);
+                                                                                        nodo.children.add(be);
+                                                                                        nodo.children.add(nodoNot);
+                                                                                        RESULT = nodo;:}
+|
+    error                                                                               {:RESULT = new node("Expresión booleana inválida");System.out.println("Expresión booleana inválida");:}
+;
+
+COMPARISON::=
+    iden:id1 COMPARISONOPERATORS:c iden:id2                                        {:node i = new node(id1,id1right+1,id1left);node v = new node(id2,id2right+1,id2left); i.variable = true; v.variable = true; c.children.add(i);c.children.add(v); RESULT = c; :}
+|
+    iden:id COMPARISONOPERATORS:c numero:n                                         {:node i = new node(id, idright+1, idleft);node v = new node(n, nright+1, nleft); v.type = "int"; i.variable = true; c.children.add(i);c.children.add(v); RESULT = c; :}
+|
+    numero:n COMPARISONOPERATORS:c iden:id                                         {:node i = new node(id, idright+1, idleft);node v = new node(n, nright+1, nleft); v.type = "int"; i.variable = true; c.children.add(v); c.children.add(i); RESULT = c; :}
+|
+    iden:id COMPARISONOPERATORS:c characterval:ch                                  {:node i = new node(id, idright+1, idleft);node v = new node(ch, chright+1, chleft);v.type = "char"; i.variable = true; c.children.add(i);c.children.add(v); RESULT = c; :}
+|
+    characterval:ch COMPARISONOPERATORS:c iden:id                                 {:node i = new node(id, idright+1, idleft);node v = new node(ch, chright+1, chleft);v.type = "char"; i.variable = true; c.children.add(v); c.children.add(i); RESULT = c; :}
+|
+    iden:id COMPARISONOPERATORS:c stringval:s                                      {:node i = new node(id, idright+1, idleft);node v = new node(s, sright+1, sleft);v.type = "string"; i.variable = true; c.children.add(i);c.children.add(v); RESULT = c;:}
+|
+    stringval:s COMPARISONOPERATORS:c iden:id                                   {:node i = new node(id, idright+1, idleft);node v = new node(s, sright+1, sleft);v.type = "string"; i.variable = true; c.children.add(v); c.children.add(i); RESULT = c;:}
+|
+    iden:id COMPARISONOPERATORS:c floatval:f                                       {:node i = new node(id, idright+1, idleft);node v = new node(f, fright+1, fleft);v.type = "float"; i.variable = true; c.children.add(i);c.children.add(v);RESULT = c; :}
+|
+    floatval:f COMPARISONOPERATORS:c iden:id                                     {:node i = new node(id, idright+1, idleft);node v = new node(f, fright+1, fleft);v.type = "float"; i.variable = true; c.children.add(v); c.children.add(i);RESULT = c; :}
+
+;    
+
+COMPARISONOPERATORS::=
+    tequal:id1      {: RESULT = new node("==",id1right+1,id1left); :}
+|
+    tnotequal:id1       {: RESULT = new node("!=",id1right+1,id1left); :}
+|
+    less:id1        {: RESULT = new node("<",id1right+1,id1left); :}
+|
+    greater:id1     {: RESULT = new node(">",id1right+1,id1left); :}
+|
+    lessorequal:id1     {: RESULT = new node("<=",id1right+1,id1left); :}
+|
+    greaterorequal:id1      {: RESULT = new node(">=",id1right+1,id1left); :}
+;
+
+IOFUNCTIONS::=
+    printf:pf parizq stringval:pv tseparator iden:id parder           {:   node nodo = new node(pf,pfright+1,pfleft);
+                                                                          nodo.children.add(new node(pv,pvright+1,pvleft));
+                                                                          nodo.children.add(new node(id,idright+1,idleft));
+                                                                          RESULT = nodo; :}
+|
+    printf:pf parizq stringval:pv tseparator stringval:id parder           {:   node nodo = new node(pf,pfright+1,pfleft);
+                                                                          nodo.children.add(new node(pv,pvright+1,pvleft));
+                                                                          nodo.children.add(new node(id,idright+1,idleft));
+                                                                          RESULT = nodo; :}
+|
+    scanf:sf parizq stringval:pv tseparator iden:id parder        {:   node nodo = new node(sf,sfright+1,sfleft);
+                                                                          nodo.children.add(new node(pv,pvright+1,pvleft));
+                                                                          nodo.children.add(new node(id,idright+1,idleft));
+                                                                          /*if()
+                                                                          {
+                                                                            System.out.println("Error en la línea: " + idright+1 + " columna: " + idleft + ", se esperaba paso de parámetros por referencia en la función 'scanf'");
+                                                                          }*/
+                                                                          RESULT = nodo; :}
+    
+;
+    
+
+
+ENDVOODOO::= endvoodoo                                     {:RESULT = new node("endvoodoo") ; :};
